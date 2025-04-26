@@ -27,9 +27,7 @@ if 'acesso_liberado' not in st.session_state:
 
 st.title("🏆 A Gloriosa Enciclopédia")
 
-# Entrada de link do Challenge Place
-url = st.text_input("Cole o link do campeonato no Challenge Place:")
-
+# Função para extrair dados do Challenge Place
 def extrair_dados_challenge_place(url):
     try:
         headers = {"User-Agent": "Mozilla/5.0"}
@@ -39,9 +37,8 @@ def extrair_dados_challenge_place(url):
         nome_torneio = soup.find("h1")
         titulo = nome_torneio.text.strip() if nome_torneio else "Torneio Desconhecido"
 
-        # Simplesmente extrair times listados
         times = [tag.text.strip() for tag in soup.find_all("span") if tag.text.strip()]
-        times_filtrados = list(set([t for t in times if len(t) > 2 and len(t) < 50]))[:20]  # Limite para teste
+        times_filtrados = list(set([t for t in times if len(t) > 2 and len(t) < 50]))[:20]
 
         return {
             "titulo": titulo,
@@ -50,13 +47,55 @@ def extrair_dados_challenge_place(url):
     except Exception as e:
         return {"erro": str(e)}
 
-if url:
+# Estado inicial
+if "dados_torneio" not in st.session_state:
+    st.session_state.dados_torneio = None
+
+# Atualizar ou carregar dados
+def carregar_dados():
+    url = st.text_input("Cole o link do campeonato no Challenge Place:")
+    if st.button("🔄 Atualizar Dados"):
+        if url:
+            dados = extrair_dados_challenge_place(url)
+            if "erro" in dados:
+                st.error("Erro ao extrair dados: " + dados["erro"])
+            else:
+                st.session_state.dados_torneio = dados
+        else:
+            st.warning("Cole um link válido para atualizar.")
+
+carregar_dados()
+
+# Exibir dados extraídos
+if st.session_state.dados_torneio:
+    dados = st.session_state.dados_torneio
     st.subheader("📋 Dados Extraídos")
-    dados = extrair_dados_challenge_place(url)
-    if "erro" in dados:
-        st.error("Erro ao extrair dados: " + dados["erro"])
-    else:
-        st.write(f"**Nome do Torneio:** {dados['titulo']}")
-        st.write("**Times detectados:**")
-        st.write(dados["times"])
-        st.info("Versão de teste — IA ainda será conectada para responder com base nesses dados.")
+    st.write(f"**Nome do Torneio:** {dados['titulo']}")
+    st.write("**Times detectados:**")
+    st.write(dados["times"])
+
+    # Função de resposta da IA
+    def responder_ia(pergunta):
+        pergunta = pergunta.lower()
+        titulo = dados['titulo']
+        times = dados['times']
+        
+        if "nome" in pergunta or "torneio" in pergunta:
+            return f"O nome do torneio é **{titulo}**."
+        elif "quantos times" in pergunta or "número de times" in pergunta:
+            return f"O torneio tem **{len(times)} times**."
+        elif "quais times" in pergunta or "times participantes" in pergunta:
+            return "Os times participantes são: " + ", ".join(times) + "."
+        elif "resumo" in pergunta or "visão geral" in pergunta:
+            return f"O torneio **{titulo}** conta com **{len(times)} times** participantes: {', '.join(times)}."
+        else:
+            return "Ainda não sei responder essa pergunta nessa versão de teste. Em breve saberei muito mais!"
+
+    # Campo de chat
+    st.subheader("🤖 Pergunte algo sobre o campeonato:")
+    pergunta = st.text_input("Digite sua pergunta:")
+    if pergunta:
+        resposta = responder_ia(pergunta)
+        st.success(resposta)
+else:
+    st.info("Cole o link de um campeonato para começar!")
