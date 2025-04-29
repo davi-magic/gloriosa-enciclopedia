@@ -1,2 +1,2 @@
 # Gloriosa Enciclopédia
-Sistema de análise de campeonatos de futebol.
+Sistema de análise e perguntas sobre campeonatos de futebol.
