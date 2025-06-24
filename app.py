@@ -6,30 +6,6 @@ import re
 
 st.set_page_config(page_title="A Gloriosa Enciclopédia", page_icon="⭐", layout="wide")
 
-# 🔒 Senha
-PASSWORD = "botaelasil"
-
-# 🔐 Função de autenticação
-def check_password():
-    if "authenticated" not in st.session_state:
-        st.session_state["authenticated"] = False
-
-    if not st.session_state["authenticated"]:
-        st.markdown("<h1 style='color:gold'>⭐ A Gloriosa Enciclopédia ⭐</h1>", unsafe_allow_html=True)
-        st.markdown("#### 🔐 Acesso restrito")
-        password = st.text_input("Digite a senha:", type="password")
-
-        if password == PASSWORD:
-            st.session_state["authenticated"] = True
-            st.success("✅ Acesso liberado!")
-        elif password != "":
-            st.error("❌ Senha incorreta")
-
-        return False
-    else:
-        return True
-
-
 # 🔗 Função para extrair dados de um link do Challenge Place
 def extrair_dados(link):
     try:
@@ -102,33 +78,32 @@ def responder_pergunta(pergunta, df):
 
 
 # 🚀 APP PRINCIPAL
-if check_password():
-    st.markdown("<h1 style='color:gold'>⭐ A Gloriosa Enciclopédia está no ar ⭐</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='color:gold'>⭐ A Gloriosa Enciclopédia está no ar ⭐</h1>", unsafe_allow_html=True)
 
-    st.markdown("### 🔗 Cole os links do Challenge Place (um por linha):")
-    links_input = st.text_area("")
+st.markdown("### 🔗 Cole os links do Challenge Place (um por linha):")
+links_input = st.text_area("")
 
-    if st.button("📥 Importar Dados"):
-        links = [l.strip() for l in links_input.split("\n") if l.strip()]
-        if links:
-            df = importar_dados(links)
+if st.button("📥 Importar Dados"):
+    links = [l.strip() for l in links_input.split("\n") if l.strip()]
+    if links:
+        df = importar_dados(links)
 
-            if df.empty:
-                st.error("❌ Não foi possível extrair dados dos links fornecidos.")
-            else:
-                st.success(f"✅ {len(links)} temporadas importadas com sucesso!")
-                st.subheader("📊 Dados Consolidados:")
-                st.dataframe(df)
-
-                pergunta = st.text_input("🔎 Faça sua pergunta (Ex.: 'Top 10 artilheiros', 'Quem tem mais assistências?'):")
-
-                if pergunta:
-                    resultado = responder_pergunta(pergunta, df)
-                    if isinstance(resultado, str):
-                        st.warning(resultado)
-                    else:
-                        titulo, tabela = resultado
-                        st.subheader(titulo)
-                        st.dataframe(tabela)
+        if df.empty:
+            st.error("❌ Não foi possível extrair dados dos links fornecidos.")
         else:
-            st.warning("⚠️ Insira pelo menos um link válido.")
+            st.success(f"✅ {len(links)} temporadas importadas com sucesso!")
+            st.subheader("📊 Dados Consolidados:")
+            st.dataframe(df)
+
+            pergunta = st.text_input("🔎 Faça sua pergunta (Ex.: 'Top 10 artilheiros', 'Quem tem mais assistências?'):")
+
+            if pergunta:
+                resultado = responder_pergunta(pergunta, df)
+                if isinstance(resultado, str):
+                    st.warning(resultado)
+                else:
+                    titulo, tabela = resultado
+                    st.subheader(titulo)
+                    st.dataframe(tabela)
+    else:
+        st.warning("⚠️ Insira pelo menos um link válido.")
